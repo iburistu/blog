@@ -4,7 +4,23 @@ require(`dotenv`).config({
 
 module.exports = {
   siteMetadata: {
-    siteTitleAlt: `Minimal Blog - Gatsby Theme`,
+    // Used for the title template on pages other than the index site
+    siteTitle: `sidereal`,
+    // Default title of the page
+    siteTitleAlt: `sidereal`,
+    // Can be used for e.g. JSONLD
+    siteHeadline: `sidereal`,
+    // Will be used to generate absolute URLs for og:image etc.
+    siteUrl: `https://blog.linkletter.dev`,
+    // Used for SEO
+    siteDescription: `personal blog`,
+    // Will be set on the <html /> tag
+    siteLanguage: `en`,
+    // Used for og:image and must be placed inside the `static` folder
+    siteImage: ``,
+    // Twitter Handle
+    author: `Z. Linkletter`,
+    // Links displayed in the header on the right side
   },
   plugins: [
     {
@@ -20,16 +36,7 @@ module.exports = {
             slug: `/about`,
           },
         ],
-        externalLinks: [
-          {
-            name: `Twitter`,
-            url: `https://twitter.com/lekoarts_de`,
-          },
-          {
-            name: `Instagram`,
-            url: `https://www.instagram.com/lekoarts.de/`,
-          },
-        ],
+        externalLinks: [],
       },
     },
     {
