@@ -1,0 +1,11 @@
+{
+  "targets": {
+    "porfolio-32f3b": {
+      "hosting": {
+        "blog": [
+          "blog-fd04c"
+        ]
+      }
+    }
+  }
+}
