@@ -16,11 +16,6 @@ module.exports = {
     siteDescription: `personal blog`,
     // Will be set on the <html /> tag
     siteLanguage: `en`,
-    // Used for og:image and must be placed inside the `static` folder
-    siteImage: ``,
-    // Twitter Handle
-    author: `Z. Linkletter`,
-    // Links displayed in the header on the right side
   },
   plugins: [
     {
@@ -32,11 +27,20 @@ module.exports = {
             slug: `/blog`,
           },
           {
-            title: `About`,
-            slug: `/about`,
+            title: `Projects`,
+            slug: `/projects`,
           },
         ],
-        externalLinks: [],
+        externalLinks: [
+          {
+            name: `Twitter`,
+            url: `https://twitter.com/iburistu`
+          },
+          {
+            name: `Github`,
+            url: `https://github.com/iburistu`
+          }
+        ],
       },
     },
     {
@@ -49,9 +53,9 @@ module.exports = {
     {
       resolve: `gatsby-plugin-manifest`,
       options: {
-        name: `minimal-blog - @lekoarts/gatsby-theme-minimal-blog`,
-        short_name: `minimal-blog`,
-        description: `Typography driven, feature-rich blogging theme with minimal aesthetics. Includes tags/categories support and extensive features for code blocks such as live preview, line numbers, and code highlighting.`,
+        name: `sidereal`,
+        short_name: `sidereal`,
+        description: `personal blog`,
         start_url: `/`,
         background_color: `#fff`,
         theme_color: `#6B46C1`,
