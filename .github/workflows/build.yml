@@ -21,3 +21,4 @@ jobs:
         - run: firebase deploy --project porfolio-32f3b --token ${{ secrets.FIREBASE_TOKEN }}
           env: 
               CI: true
+              GOOGLE_ANALYTICS_ID: ${{ secrets.GOOGLE_ANALYTICS_ID }}
