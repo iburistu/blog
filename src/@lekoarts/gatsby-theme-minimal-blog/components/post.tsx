@@ -44,7 +44,7 @@ const Post = ({ data: { post } }: PostProps) => (
     />
     <Styled.h2>{post.title}</Styled.h2>
     <p sx={{ color: `secondary`, mt: 3, a: { color: `secondary` }, fontSize: [1, 1, 2] }}>
-      <time>{post.date}</time>
+      <time>{[post.date.split('.')[1], post.date.split('.')[0], post.date.split('.')[2]].join('/')}</time>
       {post.tags && (
         <React.Fragment>
           {` — `}

@@ -27,7 +27,7 @@ const BlogListItem = ({ post, showTags = true }: BlogListItemProps) => (
       {post.title}
     </Styled.a>
     <p sx={{ color: `secondary`, mt: 1, mb: 0, a: { color: `secondary` }, fontSize: [1, 1, 2] }}>
-      <time>{post.date}</time>
+      <time>{[post.date.split('.')[1], post.date.split('.')[0], post.date.split('.')[2]].join('/')}</time>
       {post.timeToRead && ` — `}
       {post.timeToRead && <span>{post.timeToRead} min read</span>}
     </p>
