@@ -1,0 +1,208 @@
+---
+title: hal
+date: 2020-04-19
+description: sans 9000 or jordan or shallow
+tags:
+  - Programming
+---
+
+##### halcyon
+
+Fun fact about me - I'm about to graduate as a _computer engineer_, which is an _engineer_ that likes _computers_, and it is also a title that gives me **power**.  Why does that matter, you ask?  Well, it's going to bias the content of this blog a bit, i.e. it's about to get nerdy.
+
+Let's back up a little bit.  It is true that I'm about to graduate as a _computer engineer_, but it's not true that they like computers or have any actual power.  I mean I do technically _like_ computers...they're cool I suppose.  But in actuality, it means that I have a background in writing programs for microcontrollers.  I'm also getting a degree in _electrical engineering_, ~~or an _engineer_ that likes _electricals_~~, but that's a story for another time.  Today's focus is on writing code for microcontrollers, more specifically, STM32 ARM microcontrollers.
+
+Of [all the models](https://www.st.com/en/microcontrollers-microprocessors/stm32-32-bit-arm-cortex-mcus.html) of microcontrollers that ST produces, my favorite would have to be the [L series](https://www.st.com/content/st_com/en/products/microcontrollers-microprocessors/stm32-32-bit-arm-cortex-mcus/stm32-ultra-low-power-mcus.html), for no reason other than I have the most experience with them.  I've written low-level code for the [discovery kit](https://www.st.com/en/evaluation-tools/32l476gdiscovery.html) in one of my undergrad classes, and I feel like I have a pretty decent knowledge of how this particular processor works, and it sometimes works when I tell it to do things while I'm sitting in a dark room wondering where it all went wrong.
+
+You might be asking yourself: hey Zack, you don't know who I am or what I look like, and I've heard you're _very_ funny and _very_ smart, but wouldn't only knowing about one of the families of the ST line cause some issues when you're asked to write code for a different family? Like the L series is cool and all but aren't you pigeonholing yourself into obscurity?  
+
+And to that I'd say the following: it's ok I love meeting new people, yes and yes, and I would have to disagree.  ST understands this problem as well and actually have come up with a nifty solution to it in the form of **hardware abstraction layer** libraries.
+
+---
+
+##### hallelujah
+
+Full disclosure: I'm going to be ripping a lot of the fluffy language from ST themselves.  This quote is from the [STM32F4 HAL Documentation](https://www.st.com/resource/en/user_manual/dm00105879-description-of-stm32f4-hal-and-ll-drivers-stmicroelectronics.pdf).
+
+From ST:
+> The HAL driver layer provides a generic multi-instance simple set of APIs (application programming interfaces) to interact with the upper layer (application, libraries and stacks). It is composed of generic and extension APIs. It is directly built around a generic architecture and allows the built-upon layers, such as the middleware layer, to implement their functions without knowing in-depth how to use the MCU. This structure improves the library code reusability and guarantees easy portability to other devices.
+
+Woah.  That's a lot of words.  Let's break it down.
+
+1. HAL is a driver layer
+2. It exposes an API for an **upper layer**, which includes applications, libraries, and stacks
+3. There's a generic and extension version of HAL APIs
+4. It's pretty generic as a whole
+5. You don't need to know how to use the MCU (microcontroller) in detail
+6. This is for portability
+
+Neat? Why should you care? To quote you, my hater from earlier:
+> ...wouldn't only knowing about one of the families of the ST line cause some issues when you're asked to write code for a different family?
+
+And my response to this venomous question would be:
+> ...[the HAL libraries] improve ... code reusability and guarantees easy portability to other devices.
+
+Ok that's not a direct quote but you get the point.  The HAL libraries make code reusable, **even across families**.  One good example is a personal one: for my capstone I had written code on the previously mentioned [discovery kit](https://www.st.com/en/evaluation-tools/32l476gdiscovery.html) (which you should get one by the way - they're like $20 and I will likely be doing tutorials in the future featuring them) and was able to directly port it to a different ST MCU with **absolutely no changes whatsoever**.  
+
+**The HAL allows you to write code once and use it anywhere.**  Kinda like React components, but for microcontrollers (my second love is React...sorry).  Let's do a short example.  Ripping code straight from my capstone: this code transmits and receives a byte of data using full duplex SPI.
+
+```c:title=display.c {8}
+/**
+  * @brief Exchange a byte over SPI
+  * @param unsigned char dat
+  * @retval unsigned char
+  */
+static unsigned char send_byte_spi(unsigned char dat) {
+    unsigned char rxDat;
+    HAL_SPI_TransmitReceive(&hspi1, &dat, &rxDat, 1, 100);
+    return rxDat;
+}
+```
+
+Cool.  This looks pretty straightforward.  For all you non-C-freaks out there, I'll break it down.  This is a function called `send_byte_spi`.  It takes a `unsigned char` named `dat` as an input parameter.  An `unsigned char` is an (surprisingly) unsigned, 8-bit type that can hold values from 0 to 255.  It's an 8-bit `char` because I'm only sending one byte with this function; 8 bits = 1 byte.  The return value of this function is an `unsigned char`.  This function is declared `static` so that it can't be used outside the file `display.c`.  
+
+Inside this function is another `unsigned char` named `rxDat`.  This value eventually gets returned, and it is the return value of this function.
+
+Now for the challenging part: the highlighted HAL code.  What does this mean?  Let's take a dive into the HAL docs; for my capstone I used an L4, so let's look at those docs.  I'll transcribe the useful bits for us.  You can see for yourself on page 1116 of the [docs](https://www.st.com/resource/en/user_manual/dm00173145-description-of-stm32l4l4-hal-and-lowlayer-drivers-stmicroelectronics.pdf).
+
+> **Function Name**
+>
+> `HAL_StatusTypeDef HAL_SPI_TransmitReceive (SPI_HandleTypeDef * hspi, uint8_t * pTxData, uint8_t *pRxData, uint16_t Size, uint32_t Timeout)`
+
+> **Function Description**
+> 
+> Transmit and Receive an amount of data in blocking mode.
+
+> **Parameters**
+> - hspi: pointer to a SPI_HandleTypeDef structure that contains the configuration information for SPI module.
+> - pTxData: pointer to transmission data buffer
+> - pRxData: pointer to reception data buffer
+> - Size: amount of data to be sent and received
+> - Timeout: Timeout duration
+
+> **Return Values**
+> - HAL: status
+
+There's a lot to take in here too.  The function `HAL_SPI_TransmitReceive` has five parameters, and I'm not going to go into detail here; the point is that for any HAL function you can find anything you want to know from the docs.  The one thing here to note is a structure called the `SPI_HandleTypeDef`.  This is a struct that essentially contains all the configuration and information about a specific peripheral, in this case an SPI bus. 
+
+Peripheral specific initialization functions are used for each _type_ of peripheral (SPI, ADC, I2C, etc.).  Higher level HAL functions, like  `HAL_SPI_TransmitReceive`, take the configured peripheral structure as a parameter to perform desired operations. 
+
+By splitting the configuration and implementation of code in this way, HAL libraries allow you to keep the implementation code (for example, the code in `HAL_SPI_TransmitReceive`)  the same regardless of microcontroller - you only need to change the initialization code, and the implementation remains the same.  I can (and did) use this function with any ST microcontroller with no issues.
+
+All in all, 10/10.  Write once and use anywhere.  What's the downside then? 
+
+With any abstraction, you're just moving complexity <a href="https://www.youtube.com/watch?v=Iyn-0af_hlI" target="_blank">somewhere else</a>.  Someone or something has to shoulder that complexity.  In this case, it's ST.  They have put the complexity on their own shoulders by developing the HAL libraries in house, and giving them to the world for free.  But developing these libraries isn't enough - there are a LOT of models that ST makes for every family, and they've even recently [developed a new microprocessor](https://www.st.com/en/microcontrollers-microprocessors/stm32l5-series.html).  Can they really cover _every_ model?  Actually, yes.  They made another tool to do just that: [STM32CubeMX](https://www.st.com/en/development-tools/stm32cubemx.html) (I'll make a post about this later maybe?).  
+
+---
+
+##### halfheartedness
+
+But that doesn't really address the issue on anyone's mind.  All this fluff to make things work regardless of MCU...are the HAL libraries performant?  Depends on who you ask.  Let's use another example featuring a very simple operation: toggling an LED.  First, let's look at the low-level way of doing it by register, and then we will compare it to the high-level way of doing it with the HAL.  We will ignore boilerplate code in both methods and focus in on the code we care about.  Also, just for clarity, we are toggling GPIO pin 8 on port E.  If that makes no sense...sorry.
+
+First, the _hacker_ way:
+
+```c:title=gpio_toggle.c
+//  Enable the clock to GPIO Port E	
+RCC->AHB2ENR |= RCC_AHB2ENR_GPIOEEN;   
+
+//  Initialize the green LED
+//  MODE: 00: Input mode,         01: General purpose output mode
+//  10: Alternate function mode,  11: Analog mode (reset state)
+GPIOE->MODER &= ~GPIO_MODER_MODE8 ;
+GPIOE->MODER |= GPIO_MODER_MODE8_0;
+
+//  Toggle the green LED
+GPIOE->ODR ^= GPIO_ODR_ODR_8;
+```
+
+There's a **LOT** going on here, but we are going to ignore it for now.  Let's look at the HAL~~, also known as the normie,~~ way.
+
+```c:title=hal_gpio_toggle.c
+// Initialize the green LED
+MX_GPIO_Init();
+
+// Toggle the green LED
+HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_8);
+```
+
+Would you look at that! The HAL-way is 2 lines of code! Our code size has dropped by half!! It must be two times better, right?  Spoilers, not really.  Let's look at the `MX_GPIO_Init` code, under the hood.
+
+```c:title=mx_gpio.c
+void MX_GPIO_Init(void)
+{
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+  /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOE_CLK_ENABLE();
+
+  /*Configure GPIO pins : PE8 */
+  GPIO_InitStruct.Pin = GPIO_PIN_8;
+  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
+}
+```
+
+This uses two other functions, `__HAL_RCC_GPIOE_CLK_ENABLE` and `HAL_GPIO_Init`, which I will leave for the reader to delve into, as an exercise.  Inside those functions leads to more functions, and turtles all the way down.  What do the <a href="https://i.kym-cdn.com/photos/images/original/000/129/696/Rip_and_tear.png" target="_blank">guts</a> of the `HAL_GPIO_TogglePin` function look like?
+
+```c:title=hal_toggle.c
+void HAL_GPIO_TogglePin(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin)
+{
+  /* Check the parameters */
+  assert_param(IS_GPIO_PIN(GPIO_Pin));
+
+  if ((GPIOx->ODR & GPIO_Pin) != 0x00u)
+  {
+    GPIOx->BRR = (uint32_t)GPIO_Pin;
+  }
+  else
+  {
+    GPIOx->BSRR = (uint32_t)GPIO_Pin;
+  }
+}
+```
+
+This one isn't too too bad, but...yikes.  This is getting complex quick.  You can see firsthand where the complexity goes.  Note the `GPIO_TypeDef` as a function parameter: even individual GPIO pins have their own parameter struct!
+
+Let's compare this to the low-level code.  Without knowing anything about these microcontrollers, you would have virtually no idea how the low-level code functions without the comments.  I wouldn't.  It's incredibly specific to the MCU architecture.
+
+But the HAL code? A little easier to understand.  `MX_GPIO_Init`? Probably initializes the GPIO (wild guess).  `HAL_GPIO_TogglePin`? Probably toggles a GPIO pin.  The HAL libraries don't leave the intention of the code vague. You could argue that you could wrap the low-level code in a functions, but how would that work?
+
+```c:title=low_level_but_much_more_verbose.c {1,12}
+void low_level_init_gpio_e_pin_8(void) {
+  //  Enable the clock to GPIO Port E	
+  RCC->AHB2ENR |= RCC_AHB2ENR_GPIOEEN;   
+
+  //  Initialize the green LED
+  //  MODE: 00: Input mode,         01: General purpose output mode
+  //  10: Alternate function mode,  11: Analog mode (reset state)
+  GPIOE->MODER &= ~GPIO_MODER_MODE8 ;
+  GPIOE->MODER |= GPIO_MODER_MODE8_0;
+}
+
+void low_level_toggle_gpio_e_pin_8(void) {
+  //  Toggle the green LED
+  GPIOE->ODR ^= GPIO_ODR_ODR_8;
+}
+```
+
+Great! No more mystery to what this code does.  But what if you want to toggle GPIO E pin 8 & 9? Or GPIO A pin 6?  You, the all knowing developer, can write whatever functions you want to toggle any number of pins on any number of ports.  But how is ST supposed to account for every possible combination of pin toggling for all their microcontrollers?  With the low-level code, they can't.
+
+I'm certain that the HAL library code eventually does something similar to the low-level code (check out the `HAL_GPIO_TogglePin` code to see this in action!).  But the main benefit of the HAL code is that **it doesn't matter**.  You, the user, can write high-level, _portable_ code very quickly, and that saves time and money at the cost of performance.  Who cares if the actual code size is quintupled, I just want to make light-flashy machine go brrrr.
+
+---
+
+##### haltering
+
+So.  What does this all mean?  I'm by no means an expert here, but I think this can teach us a few lessons.
+
+- This is complicated
+- Very, very complicated
+- I don't really know how this all works
+- **Adding abstraction only moves the complexity out of the user's sight**
+
+When you add abstractions, it's great for developers.  Amazing even.  I love the HAL.  So much that I _would_ marry it.  But it does have some pitfalls, which require some...fancy workarounds.  [Change always breaks something.](https://xkcd.com/1172/)
+
+I'm planning on doing another post about some things that I've discovered when using the HAL, but I think this is a good introduction into _what it is_.
+
+💓

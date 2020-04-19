@@ -41,7 +41,6 @@ module.exports = {
             url: `https://github.com/iburistu`
           }
         ],
-        formatString: "MM/DD/YYYY",
         feedTitle: "sidereal"
       },
     },

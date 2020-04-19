@@ -7,7 +7,7 @@ const Footer = () => (
       boxSizing: `border-box`,
       display: `flex`,
       justifyContent: `space-between`,
-      mt: [6],
+      mt: [4],
       color: `secondary`,
       a: {
         variant: `links.secondary`,
