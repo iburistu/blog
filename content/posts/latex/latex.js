@@ -1,10 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import loadable from '@loadable/component';
 import katex from './katex.mjs';
 import { TwitterPicker } from 'react-color';
 import './katex.min.css';
-
-const html2canvas = loadable(() => import('html2canvas'));
 
 const eqns = [
     `a^2 + b^2 = c^2`,
@@ -41,22 +38,21 @@ const useScript = url => {
   };
 
 const Latex = () => {
-    const [latex, setLatex] = useState(eqns[randomEqn]);
     const [input, setInput] = useState(eqns[randomEqn]);
     const [fontSize, setFontSize] = useState(24);
     const [fontColor, setFontColor] = useState('');
-    const [copied, setCopied] = useState(false);
 
     useScript("https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.js");
 
     useEffect(() => {
-        setLatex(katex.renderToString(String.raw`${input}`, {
+        katex.render(String.raw`${input}`, document.getElementById('latex'), {
             throwOnError: false,
             displayMode: true,
             maxExpand: 1,
             maxSize: 50,
-            trust: false
-        }));
+            trust: false,
+            output: 'html'
+        });
     }, [input]);
 
     const handleColorChange = (color, e) => {
@@ -70,17 +66,6 @@ const Latex = () => {
         else setFontSize(newFontSize);
     }
 
-    const makeImage = () => {
-        const eqn = document.getElementById('latex');
-        html2canvas(eqn, {
-            backgroundColor: null,
-            scale: window.devicePixelRatio * 2.5,
-        })
-        // eslint-disable-next-line no-undef
-        .then(canvas => canvas.toBlob(blob => navigator.clipboard.write([new ClipboardItem({'image/png': blob})])));
-        setCopied(true);
-    }
-
     return (
         <div
             id="test"
@@ -91,7 +76,7 @@ const Latex = () => {
         >
             <div style={{
                 display: 'grid',
-                gridTemplateRows: '70px 30px 70px 30px 70px 100px 250px 25px',
+                gridTemplateRows: '70px 30px 70px 30px 70px 100px 250px',
                 gridTemplateColumns: '100%',
                 alignItems: 'center'
             }}>
@@ -152,20 +137,7 @@ const Latex = () => {
                         alignContent: 'center',
                         padding: '1.5rem',
                     }}
-                    onKeyPress={e => makeImage()}
-                    onClick={e => makeImage()}
-                    role='button'
-                    tabIndex={0}
-                    dangerouslySetInnerHTML={{__html: latex}}
                 ></div>
-                <span
-                    style={{
-                        display: copied ? 'block' : 'none',
-                        justifySelf: 'center'
-                    }}
-                >
-                    Copied to clipboard! 💓
-                </span>
             </div>
         </div>
     );
