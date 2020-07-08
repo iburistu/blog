@@ -1,0 +1,370 @@
+---
+title: map & reduce
+date: 2020-07-07
+description: reuse & recycle?
+tags:
+  - Programming
+---
+
+There's something about how JavaScript provides methods for arrays that's just so \***chef's kiss**\* dang handy.  From [MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array) one can see that there's 30+ methods provided for arrays that have all sorts of useful purposes, and of which, like three should actually be used.  I would argue that the most beneficial of these changes came with EMCAScript 5 in 2009, but that's just me.
+
+The two method's I want to dive into today are *map* and *reduce*.  This isn't Hadoop ([RIP](https://medium.com/@acmurthy/hadoop-is-dead-long-live-hadoop-f22069b264ac)), but instead two methods that operate on arrays in their own, special ways.
+
+I'm not going to discuss how these two array methods are used in JavaScript - someone else could do a much better tutorial and you should check out a different site if you're interested in that.  What I'm interested in is discussing *how* these two methods work and how easy it is to get similar functionality in a different programming language.
+
+For that, I attempted to recreate the methods map and reduce in Ol' Reliable, C.
+
+#### map
+
+Copying from someone smarter than me,
+
+> Mapping is a fundamental functional programming technique for operating on all of the elements in an array and producing another array of the same length with transformed contents.
+>
+> \- M. David Green
+
+Essentially, in the simplest terms possible, `map` should perform an operation or operations on an array and return an array with the operation(s) performed on it.  One key thing to note is that the returned array is the **same size** as the input array.
+
+Basically, for every element in an array, do *something* to the element and add it to a new array in the index that matches the source array.
+
+> But Zack, why can't I just use a *for* loop and just like run a function that does things on the array? Sounds kinda dumb...?
+
+While you definitely *can* do that, I'd argue that its probably worse for anyone else reading your code in the future.  Another quote from another smart person, 
+
+> Indeed, the ratio of time spent reading versus writing is well over 10 to 1. We are constantly reading old code as part of the effort to write new code. ...[Therefore,] making it easy to read makes it easier to write.
+>
+> \- Robert C. Martin, Clean Code: A Handbook of Agile Software Craftsmanship
+
+Having some unified method to perform operations on arrays is necessary IMO.  If you need to square all the elements of an array, I would argue that a consistent naming scheme (aka `arr.map(square)`, or spoiler, `map(arr, square)`) would be much easier to decipher down the line compared to an uncommented for loop.  And that's just a simple case! If you need to do something super esoteric, it'll only get harder to read for some poor sap who's one month in and still can't figure out what anything does. Not speaking from experience...
+
+Enough talking.  [Let's get down to business](https://www.youtube.com/watch?v=TVcLIfSC4OE).
+
+I'm going to provide this boilerplate code.  I'm not going to go into deep detail of what it does; I'd recommend a C book or just Google if you don't know what's going on.
+
+```c:title=boilerplate.c
+#include <stdio.h>
+
+// Convenience array print function
+void printArr(int *arr, int size) {
+    for (int i = 0; i < size; i++) {
+        printf("%d | ", arr[i]);
+    }
+    printf("\n");
+}
+
+int main() {
+    // Test array
+    int arr[] = {2, 5, 7, 90, 70};
+    printArr(arr, sizeof(arr) / sizeof(arr[0]));
+    return 0; 
+} 
+```
+
+When run, this basic code should output the following:
+
+```c
+2 | 5 | 7 | 90 | 70 |
+```
+
+Simple enough.  It prints out the array.  Nice. How can we make this do...*the mapping*?
+
+First things first, I'm going to predict that we'll have some issues down the line if we don't simplify things now.  What I mean is, we'll need a custom type that remedies some of the problems that passing variables to functions have.
+
+Specifically, I'm talking about the problem C has with passing pointers to functions.  If you try to find the size of an array passed in as a pointer, you can't use `sizeof` to find the size.  `sizeof` will return the size of the pointer, not the array.  As an example, try this in OnlineGDB:
+
+```c:title=yikes.c {6,16}
+#include <stdio.h>
+
+// Convenience array print function with size parameter removed
+void printArr(int *arr) {
+    // Find the size in this function instead
+    for (int i = 0; i < sizeof(arr) / sizeof(arr[0]); i++) {
+        printf("%d | ", arr[i]);
+    }
+    printf("\n");
+}
+
+int main() {
+    // Test array
+    int arr[] = {2, 5, 7, 90, 70};
+    // Remove size calc from here
+    printArr(arr);
+    return 0; 
+} 
+```
+
+If this is run, you'll only get the first two terms, `2 | 5 |`.  All we did was move the size calc inside the function, and now it don't work.
+
+To remedy this, let's add a custom `Array` type. This type is a `struct` with two members, `size`, and `el`.
+
+```c:title=Array.c
+typedef struct Array {
+    int size;
+    int *el;
+} Array;
+```
+
+The `size` member will be the size of the `Array`, and the `el` member will be a pointer to an array that is the elements of this Array.
+
+Let's rework the boilerplate code to include this new type.
+
+```c:title=boilerplate_rework.c
+#include <stdio.h>
+// Include malloc!
+#include <stdlib.h>
+
+// Array type
+typedef struct Array {
+    int size;
+    int *el;
+} Array;
+
+// Convenience array print function
+void printArr(Array *arr) {
+    for (int i = 0; i < arr->size; i++) {
+        printf("%d | ", arr->el[i]);
+    }
+    printf("\n");
+}
+
+int main() {
+    // Test array
+    int arr[] = {2, 5, 7, 90, 70};
+    // New Array
+    Array *Arr = malloc(sizeof(Array));
+	Arr->el = arr;
+	Arr->size = sizeof(arr) / sizeof(arr[0]);
+    printArr(Arr);
+    return 0; 
+} 
+```
+
+There we go. By passing the `printArr` function the new `Array` type, it has an accurate representation of the array, and when run, this code does what we expect.
+
+> But Zack...why can't we just pass the size in? Seems like the same thing to me! Also, the initialization is garbage you don't know what ur doing!!!
+
+Yes, you could.  But as we expand to actually *mapping*, it'll make **my** life a lot easier, so I'm ok with it I guess.  YMMV. Also, to my knowledge there's probably a better way to handle the initialization of an `Array`, but I wasn't able to figure it out. Feel free to improve as you wish.
+
+Now that the boilerplate is done, we can actually start writing a `map` function.  For this, I'm going to use the JavaScript `map` method's arguments to start us off, but I'm going to modify the array in-place instead because I found it easier to do.  Essentially, we need some function that does:
+
+```c:title=map_prototype.c
+void map(const int val, int idx, int *arr) {
+    ...
+}
+```
+
+The first argument, `val`, is the current value at the index `idx`.  `*arr` is a pointer to the original array.
+
+There's just one problem: this should be the callback function's parameters.  For example, if we wanted to double every element in an array, we would use something like:
+
+```c:title=dbl.c
+int dbl(const int val, int idx, int *arr) {
+    return 2 * val;
+}
+```
+
+and pass this function to our `map` function, which should take the `dbl` function as a parameter. But can we do that? Pass a function to a function as a function parameter?  Well...yes.  Enter, function pointers.
+
+##### function pointers 👉
+
+Unlike normal pointers, a function pointer points to code, not data. Typically a function pointer stores the start of executable code.  Also, we don't need to allocate or de-allocate memory using function pointers, and we can use a function's name to get it's address.  Copying an example of a function pointer from [GeeksforGeeks](https://www.geeksforgeeks.org/function-pointer-in-c/):
+
+```c:title=g4g.c
+#include <stdio.h> 
+// A normal function with an int parameter 
+// and void return type 
+void fun(int a) 
+{ 
+	printf("Value of a is %d\n", a); 
+} 
+
+int main() 
+{ 
+	// fun_ptr is a pointer to function fun() 
+	void (*fun_ptr)(int) = &fun; 
+
+	/* The above line is equivalent of following two 
+	void (*fun_ptr)(int); 
+	fun_ptr = &fun; 
+	*/
+
+	// Invoking fun() using fun_ptr 
+	(*fun_ptr)(10); 
+
+	return 0; 
+} 
+```
+
+We're going to leverage this sorcery to our own benefit!  But first, let's define what `map` should actually look like, with some code that won't compile.
+
+```c:title=map_prototype2.c
+void map(Array *arr, callbackFunction()) {
+    for (int i = 0; i < arr->size; i++) {
+        arr->el[i] = callbackFunction();
+    }
+}
+```
+
+For each element of the `Array` `arr`, passed in as a pointer, run some callback function, and the return value of that callback function should be the new value of the element of the array at the current index.  
+
+One of the great things about function pointers is that the name of the function passed as a parameter doesn't matter; the *shape* of the passed function defines how it can be used.  Also, the **name** of the function is a *pointer* to the function, kinda like arrays.  The biggest limitation of function pointers is that the function that's passed in **must** match both the types of the parameters and the number of parameters in the.  If that's confusing, just take a look at the completed map function:
+
+```c
+void map(Array *arr, int cb(int, int, int*)) {
+    for (int i = 0; i < arr->size; i++) {
+        arr->el[i] = cb(arr->el[i], i, arr->el);
+    }
+}
+```
+
+In this `map` implementation, the callback function (function pointer) is called `cb`, and the callback function is defined to take exactly three parameters.  `cb`'s first parameter is the current value, given as `arr->el[i]`.  The second parameter of `cb` is the current index, `i`.  The last parameter is the array itself, `arr->el`.  `cb` is defined to return an `int`.
+
+So, in practice, what that means is we can do the following:
+
+```c:title=map_complete.c
+#include <stdio.h>
+#include <stdlib.h>
+
+// Array type
+typedef struct Array {
+    int size;
+    int *el;
+} Array;
+
+// Function we want to call with map
+int dbl(int val, int idx, int * arr) {
+    return 2 * val;
+}
+
+// Map function
+void map(Array *arr, int cb(int, int, int*)) {
+    for (int i = 0; i < arr->size; i++) {
+        arr->el[i] = cb(arr->el[i], i, arr->el);
+    }
+}
+
+// Convenience array print function
+void printArr(Array *arr) {
+    for (int i = 0; i < arr->size; i++) {
+        printf("%d | ", arr->el[i]);
+    }
+    printf("\n");
+}
+
+int main() {
+    // Test array
+    int arr[] = {2, 5, 7, 90, 70};
+    // New Array
+    Array *Arr = malloc(sizeof(Array));
+	Arr->el = arr;
+	Arr->size = sizeof(arr) / sizeof(arr[0]);
+    printArr(Arr);
+    map(Arr, dbl);
+    printArr(Arr);
+    return 0; 
+} 
+```
+
+If this code is run, you'd see the following output:
+
+```
+2 | 5 | 7 | 90 | 70 | 
+4 | 10 | 14 | 180 | 140 |
+```
+
+Looks like the array has been doubled! Nifty! For each element in the array, we call a function that's passed the current value of the array, the current index of the array, and the array itself.  With these three parameters, many useful operations on the array can be performed with a dedicated function using a standard function interface.
+
+#### reduce
+
+`reduce` will be much easier to get done because the bulk of the work has already been done for us.  But first, let's define exactly what `reduce` should do.
+
+[MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reduce) defines `reduce` as 
+
+> ...[a] method [that] executes a reducer function (that you provide) on each element of the array, resulting in single output value
+
+and the reducer function should take four arguments:
+
+1. Accumulator `acc`
+2. Current Value `cur`
+3. Current Index `idx`
+4. Source Array `src`
+
+Essentially, this is very similar to the `map` function that's already been written.  We just need to change up the parameters and what it does to create a `reduce` function. However, the `reduce` function needs to take in a last parameter which is the initial value of the accumulator.  Let's take a look at the complete reduce function and dissect it a bit:
+
+```c:title=reduce_prototype.c
+int reduce(Array *arr, int cb(int, int, int, int*), int initVal) {
+    int acc = initVal;
+    for (int i = 0; i < arr->size; i++) {
+        acc = cb(acc, arr->el[i], i, arr->el);
+    }
+    return acc;
+}
+```
+
+We first set the accumulator `acc` as the initial value `initVal`.  Next, for each element in the array, we reassign `acc` to the return value of the reducer function `cb`.  Finally, we return the accumulated value after we exhaust the reducer function.
+
+In practice, we could use this function to sum the array, like so:
+
+```c:title=reduce_complete.c
+#include <stdio.h>
+#include <stdlib.h>
+
+// Array type
+typedef struct Array {
+    int size;
+    int *el;
+} Array;
+
+// Function we want to call with reduce
+int sum(int acc, int currVal, int idx, int *arr) {
+    return acc + currVal;
+}
+
+int reduce(Array *arr, int cb(int, int, int, int*), int initVal) {
+    int acc = initVal;
+    for (int i = 0; i < arr->size; i++) {
+        acc = cb(acc, arr->el[i], i, arr->el);
+    }
+    return acc;
+}
+
+// Convenience array print function
+void printArr(Array *arr) {
+    for (int i = 0; i < arr->size; i++) {
+        printf("%d | ", arr->el[i]);
+    }
+    printf("\n");
+}
+
+int main() {
+    // Test array
+    int arr[] = {2, 5, 7, 90, 70};
+    // New Array
+    Array *Arr = malloc(sizeof(Array));
+	Arr->el = arr;
+	Arr->size = sizeof(arr) / sizeof(arr[0]);
+    printArr(Arr);
+    printf("%d\n", reduce(Arr, sum, 0));
+    return 0; 
+} 
+```
+
+Running the previous code should print out 
+
+```
+2 | 5 | 7 | 90 | 70 | 
+174
+```
+
+with the sum of the array equaling 174 (I checked).
+
+#### recap
+
+So, cool cool.  We have two new functions, `map` and `reduce`, that don't really solve any problems and just seem to make things harder??? Why does this exist???
+
+Honestly, I just wanted to see if it could be done, and I learned a bit about function pointers as well.  It would take a lot more scaffolding to get this where I could say it would useful (optional parameters, anonymous functions, etc.), but I think it's an interesting retro-translation of features I love to use in JavaScript.  
+
+Is this code practical? No. Is it useful? Also no. But is it interesting? I'd argue yes. I think its quite nifty.
+
+Thanks for reading!
+
+❤️
