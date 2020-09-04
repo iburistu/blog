@@ -7,6 +7,8 @@ import useMinimalBlogConfig from "../hooks/use-minimal-blog-config"
 import ColorModeToggle from "./colormode-toggle"
 import Navigation from "./navigation"
 import replaceSlashes from "../utils/replaceSlashes"
+import img from "../../../../static/android-chrome-192x192.png"
+import imgInv from "../../../../static/android-chrome-192x192-inv.png"
 
 const Header = () => {
   const { siteTitle } = useSiteMetadata()
@@ -21,13 +23,16 @@ const Header = () => {
   return (
     <header sx={{ mb: [2, 3] }}>
       <Flex sx={{ alignItems: `center`, justifyContent: `space-between` }}>
-        <Link
-          to={replaceSlashes(`/${basePath}`)}
-          aria-label={`${siteTitle} - Back to home`}
-          sx={{ color: `heading`, textDecoration: `none` }}
-        >
-          <h1 sx={{ my: 0, fontWeight: `medium`, fontSize: [3, 4] }}>{siteTitle}</h1>
-        </Link>
+        <Flex sx={{ alignItems: `center`, justifyContent: `space-between` }}>
+          <Link
+            to={replaceSlashes(`/${basePath}`)}
+            aria-label={`${siteTitle} - Back to home`}
+            sx={{ color: `heading`, textDecoration: `none` }}
+          >
+            <h1 sx={{ my: 0, fontWeight: `medium`, fontSize: [3, 4], pr: 2 }}>{siteTitle}</h1>
+          </Link>
+          <img className={`sidereal-img`} src={isDark ? imgInv : img} height={32} style={{ animation: `rotation 15s infinite linear` }} />
+        </Flex>
         <ColorModeToggle isDark={isDark} toggle={toggleColorMode} />
       </Flex>
       <div

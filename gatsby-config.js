@@ -39,6 +39,10 @@ module.exports = {
           {
             name: `Github`,
             url: `https://github.com/iburistu`
+          },
+          {
+            name: `Portfolio`,
+            url: `https://linkletter.dev`
           }
         ],
         feedTitle: "sidereal"
