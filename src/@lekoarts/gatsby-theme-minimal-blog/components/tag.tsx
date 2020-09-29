@@ -41,7 +41,7 @@ const Tag = ({ posts, pageContext }: TagProps) => {
           View all tags
         </Styled.a>
       </Flex>
-      <Listing posts={posts} sx={{ mt: [4, 5] }} />
+      <Listing posts={posts} sx={{ mt: [1, 2] }} />
     </Layout>
   )
 }

@@ -23,8 +23,8 @@ module.exports = {
       options: {
         navigation: [
           {
-            title: `Blog`,
-            slug: `/blog`,
+            title: `Posts`,
+            slug: `/posts`,
           },
           {
             title: `Projects`,
@@ -45,7 +45,9 @@ module.exports = {
             url: `https://linkletter.dev`
           }
         ],
-        feedTitle: "sidereal"
+        feedTitle: "sidereal",
+        formatString: "MM/DD/YY",
+        blogPath: "/posts"
       },
     },
     {
