@@ -45,15 +45,16 @@ const Post = ({ data: { post } }: PostProps) => (
     <Styled.h2>{post.title}</Styled.h2>
     <p sx={{ color: `secondary`, mt: 3, a: { color: `secondary` }, fontSize: [1, 1, 2] }}>
       <time>{post.date}</time>
+      {post.timeToRead && ` — `}
+      {post.timeToRead && <span>{post.timeToRead} min read</span>}
       {post.tags && (
         <React.Fragment>
           {` — `}
           <ItemTags tags={post.tags} />
         </React.Fragment>
       )}
-      {post.timeToRead && ` — `}
-      {post.timeToRead && <span>{post.timeToRead} min read</span>}
     </p>
+    <p sx={{ color: `secondary`, mt: -3, fontSize: [1]}}>{post.description || ``}</p>
     <section sx={{ my: 3, ".gatsby-resp-image-wrapper": { my: [4, 4, 5], boxShadow: shadow.join(`, `) } }}>
       <MDXRenderer>{post.body}</MDXRenderer>
     </section>

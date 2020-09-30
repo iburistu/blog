@@ -31,9 +31,12 @@ const BlogListItem = ({ post, showTags = true }: BlogListItemProps) => (
       {post.timeToRead && ` — `}
       {post.timeToRead && <span>{post.timeToRead} min read</span>}
     </p>
-    <span sx={{ color: `secondary`, mt: 0, fontSize: [1, 1, 2] }}>
+    <span sx={{ color: `secondary`, mt: 0, fontSize: [1] }}>
       {post.description ?? ''}
     </span>
+    <p sx={{ color: `secondary`, mt: 1, fontSize: [0], fontStyle: `italic` }}>
+      {post.excerpt ?? ''}
+    </p>
   </Box>
 )
 
