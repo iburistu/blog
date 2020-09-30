@@ -36,7 +36,7 @@ const Homepage = ({ posts }: PostsProps) => {
         <Hero />
       </section>
       <Title text="Latest Posts">
-        <Link to={replaceSlashes(`/${basePath}/${blogPath}`)}>Read all posts</Link>
+        <Link to={replaceSlashes(`/${basePath}/${blogPath}`)}>All posts</Link>
       </Title>
       <Listing posts={posts} showTags={false} />
       <List>
