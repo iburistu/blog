@@ -1,0 +1,43 @@
+button {
+    display:inline-block;
+    border: none;
+    border-radius: 15px;
+    box-sizing: border-box;
+    text-decoration:none;
+    font-family:'Roboto',sans-serif;
+    font-weight:300;
+    text-align:center;
+    transition: all 0.2s;
+    background: #4eb5f1;
+    padding: 0 1rem;
+}
+button:hover {
+    color:#000000;
+    background-color: #a0d5f3;
+}
+
+hr {
+    margin-top: 2rem;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    max-width: 20em;
+}
+
+input {
+    margin-bottom: 1rem;
+    font: inherit;
+}
+
+.submit {
+    max-width: 5rem;
+    padding: 0.5rem;
+}
+
+.fact {
+    align-self: center;
+    font-size: larger;
+    font-style: oblique;
+}
