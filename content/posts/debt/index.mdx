@@ -1,0 +1,26 @@
+---
+title: debt
+date: 2020-12-04
+description: why is everyone so obsessed with it??? money isnt even real smh
+tags:
+  - General
+slug: "/posts/debt"
+---
+
+import Debt from './debt';
+
+<Debt />
+
+For how much people talk about the national debt, there's not much information out there about it.  Noticed that there isn't any publicly accessible API for people to perform any sort of analyses on, so I made one.
+
+The source of this data comes from the [US Treasury](https://www.treasurydirect.gov/govt/reports/pd/pd_debttothepenny.htm), but the API they pull their data from has CORS restrictions, so it's kinda useless IMO.
+
+I've created an API passthrough that has permissive CORS headers using an AWS API Gateway passthrough.  Not sure if that's kosher or not but I did it!
+
+You can access the API here: 
+
+> https://eg9v5a7pna.execute-api.us-east-1.amazonaws.com/prod/v1/trumpbux/source
+
+Note: I am paying for this so if one of y'all decides to abuse this I will shut it down without hesitation. I will kill this baby if necessary.
+
+💓
