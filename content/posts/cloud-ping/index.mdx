@@ -1,0 +1,20 @@
+---
+title: cloud ping
+date: 2021-06-05
+description: if we all do our part we can overload amazons servers and make them block us
+tags:
+  - General
+slug: "/posts/cloud-ping"
+---
+
+import CloudPing from './cloud-ping';
+
+<CloudPing />
+
+There's some cool websites like [CloudPing.info](https://www.cloudping.info) that can tell you the approximate ping between your physical location and a cloud provider's datacenter. The website pings the `https://dynamodb.REGION.amazonaws.com/` endpoint and listens for a response. However, CloudPing sends each request sequentially and runs kinda slow. I wanted to challenge myself if I could make one that shows you the information faster.
+
+This version of CloudPing uses `Promise.all` to parallelize the `fetch` requests from DynamoDB. It also uses the [high resolution resource timers built into your browser](https://developer.mozilla.org/en-US/docs/Web/API/Resource_Timing_API) to get an accurate ping from all AWS regions.
+
+I haven't got my IP address blocked yet for abusing the DynamoDB endpoints, but if you'd like we could all try together?
+
+❤
