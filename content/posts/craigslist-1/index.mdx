@@ -1,0 +1,144 @@
+---
+title: craiglist bot [0]
+date: 2021-09-12
+description: ltlry just want to be notified when new things are available thats IT
+tags:
+  - Programming
+slug: "/posts/craigslist-bot-0"
+---
+
+I'm a simple guy - I like cheap things and I like a good deal. I live for quirky Goodwill finds and unique thrift store looks. Online marketplaces are a bit more in vouge due to the current pandemic circumstances: Facebook Marketplace is not something I support (we are an anti-FB household), but Craigslist is one site I've been checking out a lot more recently.  I've scored furniture, rugs, and even my new apartment on Craigslist. One thing bothers me though about the platform: there's no way to be updated (aside from RSS feeds and IDK how those work) when something new drops.
+
+I assume this is by design; Craigslist is likely defensive about their website and do not provide a public API for consuming posts. There's no benefit for allowing third parties from taking posts from their site and rehosting them for free. As a result, there's no simple way to request posts at any given time, aside from visiting the site directly and sorting by new.
+
+In an ideal world, I would get notified when something I'm looking for has a new post added. I would be able to see a quick brief of the post, and get a link to the post on Craigslist. A thumbnail image would be appreciated as well. I've done a little bit of digging online and there looks to be API's out there that do just that, but I'm a DIY'er at heart so I thought I'd take a swing at it in a multi-part series.
+
+##### Gameplan
+
+To save my sanity and keep this post from being over 10k words long, I'll be splitting this bot into three separate posts.
+
+- Firstly, there needs to be some way to uniquely identify posts for a specific search to compare future states against. There needs to be a 'baseline' to check for updates against. That's the content of this post.
+- Second, there needs to be some way to gather information about the specific posts that have been added. I'm not going to be checking for _updated_ posts, only for uniquely added posts. This will be in a future post.
+- Lastly, there needs to be an email / notification sent out with blurbs on the updated posts and a link to the post. This will also be in a future post.
+
+##### Part 1: Webscraping
+
+To get any sort of information from Craigslist webscraping must be done. I'll be using two libraries that I've used in the past to assist with determining new posts: `got` and `cheerio`.
+
+[`got`](https://github.com/sindresorhus/got) is a simple HTTP request library and [`cheerio`](https://cheerio.js.org/) is essentially server-side jQuery and therefore really good at helping select HTML elements by ID, class, DOM element, etc.
+
+Additionally, because `got` & `cheerio` are `npm` modules, I'll be using Node. Sorry JS haters. It's easy and platform independent so sue me.
+
+At a high level, what I want is a function where I can pass in any URL from Craigslist and get a list of posts / unique post identifiers based on that search. Craigslist plays nice in the sense that any search options done are preserved as URL parameters, which means that I can define the search to be whatever I want and get updates _on that search_. If I want to only look at furniture 20 miles away from 04401, I can by setting the correct URL parameters, or by conveniently selecting what I want on the site and _just copy the URL_. This means I can use the site to downselect and use the URL that describes what I'm searching for.
+
+A few things to note: Craigslist will paginate if there's more than 120 results for a search. This isn't a huge problem but adds additional complexity if there's a lot of results for the search. Also, to select the posts, selections must be done by jQuery selectors, making this process a bit fragile. If Craigslist changes up how they name things / modify the DOM tree at all, this implementation will break.
+
+Using the Chrome Inspector tool and through trial and error, here is the (currently) working code to get all Craigslist IDs for any search:
+
+```js:title=get_ids.js
+const got = require('got');
+const cheerio = require('cheerio');
+
+const get_ids = async (url) => {
+    // Sanitize the URL
+    const sanitized_url = String(url).toLowerCase();
+
+    // If the URL doesn't have `craigslist` in it, don't bother
+    if (sanitized_url.match(/https:\/\/\w+\.craigslist\.org\//gm) === null) return [];
+
+    // Save the HTML data from the URL
+    const page_data = await got(url).text();
+
+    // We need to know if there's more than one page - if so, the number of results will be over 120
+    // The `.totalcount` <span> has the total number of results, but there's two matching elements
+    // We can just grab the first
+    const page_count = Math.floor(cheerio.load(page_data)('.totalcount').first().text() / 120);
+
+    // Gather all the ID's from the first page search results
+    // The unique ID is an attribute called `data-pid`
+    let ids = [
+        ...new Set(
+            // `#search-results` matches a <div> that has an ID of `search-results`
+            // We want the children of the search results
+            cheerio.load(page_data)('#search-results')
+                .children()
+                .map((idx, el) => 
+                    // For each child element, look at the `data-pid` attribute for 
+                    // all elements that have the class `.result-row` 
+                    cheerio.load(el)('.result-row').attr('data-pid')
+                )
+        )
+    ];
+
+    // If there's more than 120 results, then we need to get the IDs from the other pages as well
+    if (page_count) {
+        for (let i = 0; i < page_count; i++) {
+            // If there's a trailing `&`, remove it
+            // Change the page using `&s=#`
+            let next_page = await got(`${url.replace(/\&$/,'')}&s=${(i + 1) * 120}`).text();
+            // Merge the extra IDs
+            ids = [
+                ...ids,
+                ...new Set(
+                    // Same selectors as above, just on a different page!
+                    cheerio.load(next_page)('#search-results')
+                        .children()
+                        .map((idx, el) => 
+                            cheerio.load(el)('.result-row').attr('data-pid')
+                        )
+                    )
+            ];
+        }
+    }
+
+    return ids;
+}
+
+(async () => console.log(JSON.stringify(await get_ids('https://maine.craigslist.org/d/furniture/search/fua?postal=04401&search_distance=20'))))();
+```
+
+After looking at the posts themselves, all Craigslist posts have unique identifiers called `data-pid` on elements with the `result-row` class. For this specific search, I get quite a few IDs back:
+
+```
+["7360054160","7360223893","7361771372","7361808584","7362045751","7362607518","7364211693","7364637386","7365595758","7365846364","7367668743","7367672791","7367752138","7369437904","7369480555","7372022990","7373229308","7373852530","7373916124","7374129505","7374305493","7374652233","7374782520","7376566495","7376568664","7376811075","7376865937","7377887134","7378315333","7361250635","7368268500","7375815582","7349653540","7370184175","7374887143","7378765090","7365990627","7361246737","7364304181","7368942295","7367884314","7367396268","7369338880","7369340951","7369341320","7361735063","7365169144","7365730245","7365789295","7366405939","7369401514","7371502730","7371503089","7371507931","7361400803","7361217893","7374616684","7375123003","7360952721","7370174536","7370174342","7354486522","7356290437","7357808545","7357808834","7359205898","7359206290","7360121543","7363482671","7367764022","7367764444","7368771716","7368772500","7372176837","7362449394","7371037012","7369743352","7376071958","7366194932","7366197723","7374620915","7360309614","7362161180","7364588020","7364589320","7366095328","7370759533","7370760103","7377078202","7360267774","7369852183","7369852300","7370389680","7376102892","7362955976","7378141163","7377537779","7366722467","7362973876","7363034965","7367004042","7369722667","7370659054","7374520349","7376700866","7377264983","7370040195","7377073753","7377516942","7376058091","7368539044","7370279327","7378078663","7378135609","7373766220","7372595251","7359042076"]
+```
+
+These returned IDs can be used as the 'baseline' for the update detection. By gathering the IDs at a later point in time and comparing the difference between the baseline and the current, I can determine what posts are new. Also, as I gather new IDs, the returned IDs can become the new baseline. Handy!
+
+These IDs need to be persisted, along side the search URL, who to send the update to, how often to send an update, and some unique identifier for the update request. We can generate a universally unique identifier (UUID) using the [`uuid`](https://github.com/uuidjs/uuid) library and by modifying the code a bit:
+
+```js:title=get_ids_with_uuid.js
+const { v4: uuidv4 } = require('uuid');
+
+(async () => {
+    const url = `https://maine.craigslist.org/d/furniture/search/fua?postal=04401&search_distance=20`;
+    const email = `spam@linkletter.dev`;
+    const update_interval = `86400`;
+    const ids = await get_ids(url);
+
+    console.log({
+        uuid: uuidv4(),
+        url,
+        email,
+        update_interval,
+        ids: JSON.stringify(ids)
+    });
+}
+)();
+```
+
+The result of this modification looks like this:
+
+```js
+{
+  uuid: '33790f2c-c096-4c01-ba7f-a3399426d992',
+  url: 'https://maine.craigslist.org/d/furniture/search/fua?postal=04401&search_distance=20',
+  email: 'spam@linkletter.dev',
+  update_interval: '86400',
+  ids: '["7360054160","7360223893","7361771372","7361808584","7362045751","7362607518","7364211693","7364637386","7365595758","7365846364","7367668743","7367672791","7367752138","7369437904","7369480555","7372022990","7373229308","7373852530","7373916124","7374129505","7374305493","7374652233","7374782520","7376566495","7376568664","7376811075","7376865937","7377887134","7378315333","7361250635","7368268500","7375815582","7349653540","7370184175","7374887143","7378765090","7365990627","7361246737","7364304181","7368942295","7367884314","7367396268","7369338880","7369340951","7369341320","7361735063","7365169144","7365730245","7365789295","7366405939","7369401514","7371502730","7371503089","7371507931","7361400803","7361217893","7374616684","7375123003","7360952721","7370174536","7370174342","7354486522","7356290437","7357808545","7357808834","7359205898","7359206290","7360121543","7363482671","7367764022","7367764444","7368771716","7368772500","7372176837","7362449394","7371037012","7369743352","7376071958","7366194932","7366197723","7374620915","7360309614","7362161180","7364588020","7364589320","7366095328","7370759533","7370760103","7377078202","7360267774","7369852183","7369852300","7370389680","7376102892","7362955976","7378141163","7377537779","7366722467","7362973876","7363034965","7367004042","7369722667","7370659054","7374520349","7376700866","7377264983","7370040195","7377073753","7377516942","7376058091","7368539044","7370279327","7378078663","7378135609","7373766220","7372595251","7359042076"]'
+}
+```
+
+Cool. To persist this data, it can be saved to a JSON file, MySQL DB, DynamoDB, SQLite3 DB, stone tablet, etc. I'll cover persistance a bit more in the next post.  The reason I've decided to add a UUID is that the UUID can be used as a primary key for a database, and UUID's are easy to generate with most languages (and within Linux). A little bit of a spoiler for the next post: with a little bit of shell scripting and by using cron it'll be easy to stand up an update notification scheduler.
+
+Hope you enjoyed!
