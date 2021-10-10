@@ -11,7 +11,7 @@ module.exports = {
     // Can be used for e.g. JSONLD
     siteHeadline: `sidereal`,
     // Will be used to generate absolute URLs for og:image etc.
-    siteUrl: `https://blog.linkletter.dev`,
+    siteUrl: `https://besidereal.com`,
     // Used for SEO
     siteDescription: `personal blog`,
     // Will be set on the <html /> tag
@@ -55,9 +55,17 @@ module.exports = {
       },
     },
     {
-      resolve: `gatsby-plugin-google-analytics`,
+      resolve: `gatsby-plugin-google-gtag`,
       options: {
-        trackingId: process.env.GOOGLE_ANALYTICS_ID,
+        trackingIds: [
+          process.env.GA_TRACKING_ID,
+        ],
+        gtagConfig: {
+          anonymize_ip: true,
+        },
+        pluginConfig: {
+          respectDNT: true
+        }
       },
     },
     `gatsby-plugin-sitemap`,

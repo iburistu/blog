@@ -19,5 +19,9 @@ jobs:
         - run: yarn install
         - run: yarn build
           env:
-            GOOGLE_ANALYTICS_ID: ${{ secrets.GOOGLE_ANALYTICS_ID }}
-        - run: firebase deploy --project porfolio-32f3b --token ${{ secrets.FIREBASE_TOKEN }}
+            GA_TRACKING_ID: ${{ secrets.GA_TRACKING_ID }}
+        - run: aws s3 sync public/ s3://besidereal.com --no-guess-mime-type --delete
+          env:
+            AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+            AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            AWS_DEFAULT_REGION: "us-east-1"
