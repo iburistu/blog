@@ -20,7 +20,7 @@ jobs:
         - run: yarn build
           env:
             GA_TRACKING_ID: ${{ secrets.GA_TRACKING_ID }}
-        - run: aws s3 sync public/ s3://besidereal.com --no-guess-mime-type --delete
+        - run: aws s3 sync public/ s3://besidereal.com --delete
           env:
             AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
             AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
