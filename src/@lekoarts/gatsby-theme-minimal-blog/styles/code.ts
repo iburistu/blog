@@ -1,6 +1,6 @@
 import { tint } from "@theme-ui/color"
 
-export default {
+const code = {
   "[data-name='live-editor']": {
     fontSize: 1,
     "textarea, pre": {
@@ -12,44 +12,49 @@ export default {
     backgroundColor: tint(`primary`, 0.7),
   },
   ".prism-code": {
-    fontSize: 1,
-    padding: 3,
+    fontSize: [1, 1, 1],
+    padding: `2rem 1rem 1rem 1rem`,
     webkitOverflowScrolling: `touch`,
     backgroundColor: `transparent`,
-    overflow: `initial`,
-    float: `left`,
     minWidth: `100%`,
     mb: 0,
+    mt: 0,
+    overflow: `auto`,
     '&[data-linenumber="false"]': {
       ".token-line": {
         pl: 3,
       },
     },
   },
+  ".gatsby-highlight[data-language=''], .gatsby-highlight[data-language='noLineNumbers']": {
+    ".prism-code": {
+      pt: `1rem`,
+    },
+  },
   ".token": {
     display: `inline-block`,
   },
   "p > code, li > code": {
-    bg: `rgb(1, 22, 39)`,
-    color: `rgb(214, 222, 235)`,
+    bg: `gray.2`,
+    color: `gray.8`,
     px: 2,
     py: 1,
+    borderRadius: `2px`,
   },
   ".gatsby-highlight": {
-    fontSize: 1,
+    fontSize: [1, 1, 2],
     position: `relative`,
     webkitOverflowScrolling: `touch`,
     bg: `rgb(1, 22, 39)`,
-    overflow: `auto`,
+    borderRadius: `2px`,
     mx: [0, 0, 0, -3],
     ".token-line": {
       mx: -3,
+      minWidth: `100%`,
     },
-    "pre.language-": {
-      mt: 0,
-    },
-    "pre.language-noLineNumbers": {
-      mt: 0,
+    "pre code": {
+      float: `left`,
+      minWidth: `100%`,
     },
     'pre[class*="language-"]:before': {
       bg: `white`,
@@ -64,12 +69,7 @@ export default {
       textTransform: `uppercase`,
       top: 0,
     },
-    'pre[class~="language-javascript"]:before': {
-      content: `"js"`,
-      background: `#f7df1e`,
-      color: `black`,
-    },
-    'pre[class~="language-js"]:before': {
+    'pre[class~="language-javascript"]:before, pre[class~="language-js"]:before': {
       content: `"js"`,
       background: `#f7df1e`,
       color: `black`,
@@ -94,6 +94,16 @@ export default {
       background: `#005a9c`,
       color: `white`,
     },
+    'pre[class~="language-xml"]:before': {
+      content: `"xml"`,
+      background: `#005a9c`,
+      color: `white`,
+    },
+    'pre[class~="language-svg"]:before': {
+      content: `"svg"`,
+      background: `#005a9c`,
+      color: `white`,
+    },
     'pre[class~="language-graphql"]:before': {
       content: `"GraphQL"`,
       background: `#E10098`,
@@ -107,6 +117,16 @@ export default {
       content: `"mdx"`,
       background: `#f9ac00`,
       color: `black`,
+    },
+    'pre[class~="language-php"]:before': {
+      content: `"php"`,
+      background: `#777bb3`,
+      color: `black`,
+    },
+    'pre[class~="language-py"]:before, pre[class~="language-python"]:before': {
+      content: `"py"`,
+      background: `#306998`,
+      color: `white`,
     },
     'pre[class~="language-text"]:before': {
       content: `"text"`,
@@ -122,6 +142,10 @@ export default {
     },
     "pre[class~='language-yaml']:before": {
       content: `'yaml'`,
+      background: `#ffa8df`,
+    },
+    "pre[class~='language-yml']:before": {
+      content: `'yml'`,
       background: `#ffa8df`,
     },
     "pre[class~='language-markdown']:before": {
@@ -144,6 +168,16 @@ export default {
     tabSize: 4,
     hyphens: `none`,
   },
+  ".gatsby-highlight pre::-webkit-scrollbar": {
+    width: 2,
+    height: 2,
+  },
+  ".gatsby-highlight pre::-webkit-scrollbar-thumb": {
+    backgroundColor: `primary`,
+  },
+  ".gatsby-highlight pre::-webkit-scrollbar-track": {
+    background: `rgb(1, 22, 39)`,
+  },
   ".line-number-style": {
     display: `inline-block`,
     width: `3em`,
@@ -163,6 +197,7 @@ export default {
   },
   "[data-name='live-preview'], [data-name='live-editor']": {
     mx: [0, 0, 0, -3],
+    fontSize: [1, 1, 2],
   },
   ".token-line": {
     pr: 3,
@@ -176,12 +211,12 @@ export default {
       left: `-2px`,
     },
   },
-  "@keyframes rotation": {
-    from: {
-      transform: `rotate(0deg)`
-    },
-    to: {
-      transform: `rotate(359deg)`
-    }
+  ".react-live-wrapper": {
+    position: `relative`,
+  },
+  ".react-live-wrapper .code-copy-button": {
+    right: [0, 0, 0, -3],
   }
 }
+
+export default code

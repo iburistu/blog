@@ -1,23 +1,6 @@
 import React, { useState } from 'react';
 import './style.css'
 
-/* eslint-disable no-extend-native */
-Array.prototype.random = function (last) {
-    if (this.length === 0) {
-        return;
-    }
-    else if (this.length === 1) {
-        return this[0];
-    }
-    else {
-        let idx = 0;
-        do {
-            idx = ~~(Math.random() * this.length);
-        } while (this[idx] === last);
-        return this[idx];
-    }
-}
-
 const fun_fact_array = [
     "I love dogs",
     "I love cats",
@@ -48,14 +31,14 @@ const fun_fact_array = [
 ];
 
 const FunFacts = () => {
-    const [fun_fact, setFun_fact] = useState(fun_fact_array[~~(Math.random() * fun_fact_array.length)]);
+    const [fun_fact, setFun_fact] = useState(fun_fact_array[0]);
     const [status, setStatus] = useState("");
 
     return (
         <>
             <h1>Fun Facts For People Who Aren't Fun!</h1>
             <button 
-                onClick={() => setFun_fact(fun_fact_array.random(fun_fact))}
+                onClick={() => setFun_fact(fun_fact_array[Math.floor(Math.random()*fun_fact_array.length)])}
             >
                 <h4>Generate new fun fact</h4>
             </button>

@@ -1,12 +1,11 @@
 /** @jsx jsx */
-import { jsx, Styled } from "theme-ui"
+import { jsx, Heading, Link as TLink, Flex } from "theme-ui"
 import { Link } from "gatsby"
-import { Flex } from "@theme-ui/components"
 import Layout from "./layout"
 import Listing from "./listing"
 import useMinimalBlogConfig from "../hooks/use-minimal-blog-config"
 import replaceSlashes from "../utils/replaceSlashes"
-import SEO from "./seo"
+import Seo from "./seo"
 
 type PostsProps = {
   posts: {
@@ -28,12 +27,18 @@ const Blog = ({ posts }: PostsProps) => {
 
   return (
     <Layout>
-      <SEO title="Posts" />
+      <Seo title="Posts" />
       <Flex sx={{ alignItems: `center`, justifyContent: `space-between`, flexFlow: `wrap` }}>
-        <Styled.h2>Posts</Styled.h2>
-        <Styled.a as={Link} sx={{ variant: `links.secondary` }} to={replaceSlashes(`/${basePath}/${tagsPath}`)}>
+        <Heading as="h3" variant="styles.h3" sx={{ marginY: 2 }}>
+          Posts
+        </Heading>
+        <TLink
+          as={Link}
+          sx={{ variant: `links.secondary`, marginY: 2 }}
+          to={replaceSlashes(`/${basePath}/${tagsPath}`)}
+        >
           View all tags
-        </Styled.a>
+        </TLink>
       </Flex>
       <Listing posts={posts} sx={{ mt: [1, 2] }} />
     </Layout>

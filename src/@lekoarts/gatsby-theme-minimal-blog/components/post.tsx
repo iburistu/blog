@@ -1,10 +1,11 @@
 /** @jsx jsx */
-import { jsx, Styled } from "theme-ui"
+import * as React from "react"
+import { jsx, Heading } from "theme-ui"
 import { MDXRenderer } from "gatsby-plugin-mdx"
-import React from "react"
 import Layout from "./layout"
 import ItemTags from "./item-tags"
-import SEO from "./seo"
+import Seo from "./seo"
+import PostFooter from "./post-footer"
 
 type PostProps = {
   data: {
@@ -17,6 +18,7 @@ type PostProps = {
         slug: string
       }[]
       description?: string
+      canonicalUrl?: string
       body: string
       excerpt: string
       timeToRead?: number
@@ -36,28 +38,37 @@ const shadow = px.map((v) => `rgba(0, 0, 0, 0.15) 0px ${v} ${v} 0px`)
 
 const Post = ({ data: { post } }: PostProps) => (
   <Layout>
-    <SEO
+    <Seo
       title={post.title}
       description={post.description ? post.description : post.excerpt}
-      image={post.banner ? post.banner.childImageSharp.resize.src : undefined}
+      image={post.banner ? post.banner?.childImageSharp?.resize?.src : undefined}
       pathname={post.slug}
+      canonicalUrl={post.canonicalUrl}
     />
-    <Styled.h2>{post.title}</Styled.h2>
-    <p sx={{ color: `secondary`, mt: 3, a: { color: `secondary` }, fontSize: [1, 1, 2] }}>
+    <Heading as="h3" variant="styles.h3">
+      {post.title}
+    </Heading>
+    <p sx={{ color: `secondary`, mt: 0, a: { color: `secondary` }, fontSize: [1, 1, 2] }}>
       <time>{post.date}</time>
-      {post.timeToRead && ` — `}
-      {post.timeToRead && <span>{post.timeToRead} min read</span>}
       {post.tags && (
         <React.Fragment>
           {` — `}
           <ItemTags tags={post.tags} />
         </React.Fragment>
       )}
+      {post.timeToRead && ` — `}
+      {post.timeToRead && <span>{post.timeToRead} min read</span>}
     </p>
-    <p sx={{ color: `secondary`, mt: -3, fontSize: [1]}}>{post.description || ``}</p>
-    <section sx={{ my: 3, ".gatsby-resp-image-wrapper": { my: [4, 4, 5], boxShadow: shadow.join(`, `) } }}>
+    <section
+      sx={{
+        my: 0,
+        ".gatsby-resp-image-wrapper": { my: [4, 4, 5], boxShadow: shadow.join(`, `) },
+        variant: `layout.content`,
+      }}
+    >
       <MDXRenderer>{post.body}</MDXRenderer>
     </section>
+    <PostFooter post={post} />
   </Layout>
 )
 

@@ -1,25 +1,25 @@
-import React from "react"
+import * as React from "react"
 import { Helmet } from "react-helmet"
 import { withPrefix } from "gatsby"
 import useSiteMetadata from "../hooks/use-site-metadata"
 
-const defaultProps = {
-  title: ``,
-  description: false,
-  pathname: false,
-  image: false,
-  children: null,
-}
-
-type Props = {
+type SEOProps = {
   title?: string
   description?: string
   pathname?: string
   image?: string
   children?: React.ReactNode
+  canonicalUrl?: string
 }
 
-const SEO = ({ title, description, pathname, image, children }: Props) => {
+const Seo = ({
+  title = ``,
+  description = ``,
+  pathname = ``,
+  image = ``,
+  children = null,
+  canonicalUrl = ``,
+}: SEOProps) => {
   const site = useSiteMetadata()
 
   const {
@@ -38,6 +38,11 @@ const SEO = ({ title, description, pathname, image, children }: Props) => {
     url: `${siteUrl}${pathname || ``}`,
     image: `${siteUrl}${image || defaultImage}`,
   }
+
+  const isBrowser = typeof window !== "undefined"
+
+
+
   return (
     <Helmet title={title} defaultTitle={defaultTitle} titleTemplate={`%s | ${siteTitle}`}>
       <html lang={siteLanguage} />
@@ -57,14 +62,13 @@ const SEO = ({ title, description, pathname, image, children }: Props) => {
       <meta name="twitter:image:alt" content={seo.description} />
       <meta name="twitter:creator" content={author} />
       <meta name="gatsby-theme" content="@lekoarts/gatsby-theme-minimal-blog" />
-      <link rel="icon" type="image/png" sizes="32x32" href={withPrefix(`/favicon-32x32.png`)} />
-      <link rel="icon" type="image/png" sizes="16x16" href={withPrefix(`/favicon-16x16.png`)} />
+      <link rel="icon" type="image/png" sizes="32x32" href={isBrowser ? (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? withPrefix(`/favicon-32x32-inv.png`) : withPrefix(`/favicon-32x32.png`)) : withPrefix(`/favicon-32x32.png`)} />
+      <link rel="icon" type="image/png" sizes="16x16" href={isBrowser ? (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? withPrefix(`/favicon-16x16-inv.png`) : withPrefix(`/favicon-16x16.png`)) : withPrefix(`/favicon-16x16.png`)} />
       <link rel="apple-touch-icon" sizes="180x180" href={withPrefix(`/apple-touch-icon.png`)} />
+      {canonicalUrl ? <link rel="canonical" href={canonicalUrl} /> : null}
       {children}
     </Helmet>
   )
 }
 
-export default SEO
-
-SEO.defaultProps = defaultProps
+export default Seo

@@ -9,10 +9,10 @@ type ListProps = {
 const List = ({ children }: ListProps) => (
   <section
     sx={{
-      mb: 0,
+      mb: [5, 5, 6],
       ul: { margin: 0, padding: 0 },
-      li: { listStyle: `none`, mb: 3 },
-      a: { variant: `links.listItem` },
+      li: { listStyle: `none`, mb: 3, a: { variant: `links.listItem` } },
+      variant: `section_bottom`,
     }}
   >
     {children}

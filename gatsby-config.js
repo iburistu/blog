@@ -55,17 +55,20 @@ module.exports = {
       },
     },
     {
-      resolve: `gatsby-plugin-google-gtag`,
+      resolve: `gatsby-omni-font-loader`,
       options: {
-        trackingIds: [
-          process.env.GA_TRACKING_ID,
+        enableListener: true,
+        preconnect: [`https://fonts.gstatic.com`],
+        interval: 300,
+        timeout: 30000,
+        // If you plan on changing the font you'll also need to adjust the Theme UI config to edit the CSS
+        // See: https://github.com/LekoArts/gatsby-themes/tree/main/examples/minimal-blog#changing-your-fonts
+        web: [
+          {
+            name: `IBM Plex Sans`,
+            file: `https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap`,
+          },
         ],
-        gtagConfig: {
-          anonymize_ip: true,
-        },
-        pluginConfig: {
-          respectDNT: true
-        }
       },
     },
     `gatsby-plugin-sitemap`,
@@ -93,8 +96,55 @@ module.exports = {
         ],
       },
     },
+    {
+      resolve: `gatsby-plugin-feed`,
+      options: {
+        query: `
+          {
+            site {
+              siteMetadata {
+                title: siteTitle
+                description: siteDescription
+                siteUrl
+                site_url: siteUrl
+              }
+            }
+          }
+        `,
+        feeds: [
+          {
+            serialize: ({ query: { site, allPost } }) =>
+              allPost.nodes.map((post) => {
+                const url = site.siteMetadata.siteUrl + post.slug
+                const content = `<p>${post.excerpt}</p><div style="margin-top: 50px; font-style: italic;"><strong><a href="${url}">Keep reading</a>.</strong></div><br /> <br />`
+
+                return {
+                  title: post.title,
+                  date: post.date,
+                  excerpt: post.excerpt,
+                  url,
+                  guid: url,
+                  custom_elements: [{ "content:encoded": content }],
+                }
+              }),
+            query: `
+              {
+                allPost(sort: { fields: date, order: DESC }) {
+                  nodes {
+                    title
+                    date(formatString: "MMMM D, YYYY")
+                    excerpt
+                    slug
+                  }
+                }
+              }
+            `,
+            output: `rss.xml`,
+            title: `besidereal`,
+          },
+        ],
+      },
+    },
     `gatsby-plugin-offline`,
-    `gatsby-plugin-netlify`,
-    // `gatsby-plugin-webpack-bundle-analyser-v2`,
   ],
 }

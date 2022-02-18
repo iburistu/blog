@@ -1,0 +1,205 @@
+---
+title: craiglist bot [1]
+date: 2022-02-17
+description: now with 100% more persistance!
+tags:
+  - Programming
+slug: "/posts/craigslist-bot-1"
+---
+
+In the last post about a Craigslist bot we were able to generate a list of posts by ID. While this by itself is _super cool_, it's not particularly useful..? It can give a nice list of posts but what I want is __data__ about these listings. Where are they? Who are they? _When_ are they?
+
+Thankfully the work done during the last post can be leveraged here as well. Each unique post ID has a unique URL to a post listing (which is obvious - you want one post to equal one URL...would be a nightmare if they shared!). By grabbing the URL that the searched post links to, we can webscrape from that URL for more details about the post.
+
+I'm going to first define a function that takes in a base URL to start with, and an array of post IDs:
+
+```js
+const got = require('got');
+const cheerio = require('cheerio');
+
+const get_updated = async (url, ids) => {
+
+}
+```
+
+Easy enough. These post IDs will be the _difference_ between the baseline and current post listing, but for testing purposes I'm going to throw a ton of IDs in. 
+
+Firstly, we need to get the HTML data from the URL provided. I know that I'm going to have a ton of different posts to get data from, and I want this to be done efficiently and in parallel - there's no dependencies between posts. Because of this I'm going to use `Promise.all()` to run a large number of parallel HTTP requests simultaneously.
+
+```js
+const got = require('got');
+const cheerio = require('cheerio');
+
+const get_updated = async (url, ids) => {
+
+    const data = await got(url).text();
+
+    return await Promise.all(ids.map(async id => {
+
+    }))
+}
+```
+
+For each of the posts, I want to only have to search through IDs that match the list of those that are different. No need to have a ton of text if you can downselect using the IDs. jQuery has a selector that lets you select those with specific attributes & values, and I want to use the same `data-pid` attribute that I used last time to generate the list of IDs to help me downselect. To do that, you need to specify the attribute and value in the form `[attr=value]`.
+
+```js
+const got = require('got');
+const cheerio = require('cheerio');
+
+const get_updated = async (url, ids) => {
+
+    const data = await got(url).text();
+
+    return await Promise.all(ids.map(async id => {
+        const results = cheerio.load(data)(`[data-pid=${id}]`).html();
+        const $ = cheerio.load(results);
+    }))
+}
+```
+
+Within this downselection, there's only one `<a>` element to the specific post, which is really handy. We can follow the `href` attribute of the `<a>` element to get more information about the post, and to grab the URL that this link _links_ to, we just need to access the `href` attribute using the `.attr()` function.
+
+```js
+const got = require('got');
+const cheerio = require('cheerio');
+
+const get_updated = async (url, ids) => {
+
+    const data = await got(url).text();
+
+    return await Promise.all(ids.map(async id => {
+        const results = cheerio.load(data)(`[data-pid=${id}]`).html();
+        const $ = cheerio.load(results);
+        const url = $('a').attr('href');
+    }))
+}
+```
+
+The URL we just extracted leads to a more detailed page about this particular listing. If we follow it / grab its contents using `got`, we can get more information for this listing.
+
+```js
+const got = require('got');
+const cheerio = require('cheerio');
+
+const get_updated = async (url, ids) => {
+
+  const data = await got(url).text();
+
+  return await Promise.all(ids.map(async id => {
+    const results = cheerio.load(data)(`[data-pid=${id}]`).html();
+    const $ = cheerio.load(results);
+    const url = $('a').attr('href');
+    
+     return got(url).text()
+        .then(data => {
+            // I'm using a double $ to remind myself that this is an 'inner'
+            // jQuery selector function
+            const $$ = cheerio.load(data);
+        });
+    }))
+}
+```
+
+There's a lot of fields available in the post listing, but not all of them are useful! I'm specifically interested in the following fields:
+- URL to the listing
+- Price
+- Name of the listing
+- Location
+- Distance (if applicable)
+- When the listing was made
+- Some details about the listing
+- An image or two, if applicable
+- Any additional attributes about the listing
+
+I dug around a bit in the HTML of a Craigslist post and was able to come up with the following. I'm sure it's not perfect, but it seems to work for searches that I'm interested in! Feel free to edit as necessary.
+
+Here's the final function:
+
+```js:title=get_updated.js
+const got = require('got');
+const cheerio = require('cheerio');
+
+const get_updated = async (url, ids) => {
+
+  const data = await got(url).text();
+
+  return await Promise.all(ids.map(async id => {
+    const results = cheerio.load(data)(`[data-pid=${id}]`).html();
+    const $ = cheerio.load(results);
+    const url = $('a').attr('href');
+    
+     return got(url).text()
+        .then(data => {
+            const $$ = cheerio.load(data);
+
+            return {
+                url,
+                price: $('.result-meta > .result-price').text(),
+                title: $('.result-title').text(),
+                // Replace non-whitespace characters with nothing, but don't remove Unicode
+                location: $('.result-hood').text().replace(/[^a-zA-Z\d\s:\u00C0-\u00FF]/g, '').trim(),
+                distance: $('.maptag').text(),
+                time: $('time').attr('datetime'),
+                // There seems to be 70 random characters at the start of every posting body...
+                // Trim start & remove newlines and whitespace
+                description: $$('#postingbody').text().slice(70).split('\n').filter(Boolean).map(el => el.trim()).join(' '),
+                // Grab the thumbnail, if applicable
+                img: $$('img[title=1]').attr('src'),
+                // Filter and remove unwanted attributes
+                attributes: $$('.attrgroup > span').map((idx, el) => $$(el).text()).toArray().filter(Boolean).filter(el => !el.includes('ads'))
+            }
+        });
+    }))
+}
+```
+
+How does this tie into the code from last time? If we combine the two like so:
+
+```js
+(async () => {
+    const url = `https://maine.craigslist.org/d/furniture/search/fua?postal=04402&search_distance=10`;
+    const email = `spam@linkletter.dev`;
+    const update_interval = `86400`;
+    const ids = await get_ids(url);
+
+    console.log({
+        uuid: uuidv4(),
+        url,
+        email,
+        update_interval,
+        // Ignore the ids[0] here...I don't want to copy in 50+ records lol
+        posts: await get_updated(url, [ids[0]])
+    });
+}
+)();
+```
+
+we can get the following output:
+
+```js
+{
+  uuid: '222393f5-3a27-4b21-9c26-d18755303ae5',
+  url: 'https://maine.craigslist.org/d/furniture/search/fua?postal=04402&search_distance=10',
+  email: 'spam@linkletter.dev',
+  update_interval: '86400',
+  posts: [
+    {
+      url: 'https://maine.craigslist.org/fuo/d/bangor-oak-table/7408541258.html',
+      price: '$1,200',
+      title: 'oak table',
+      location: 'Bangor',
+      distance: '0mi',
+      time: '2021-11-15 21:21',
+      description: 'Oak table center tier folds down, underside cabinet and six high back chairs great shape. 42 by 54 two tiers 54x54 with three tiers',
+      img: 'https://images.craigslist.org/01717_i51JiGM6Uo1z_0CI0t2_600x450.jpg',
+      attributes: ["condition: excellent"]
+    }
+  ]
+}
+```
+
+Lookie here! Looks good :)
+
+I lied - next post we will pull together a DB for some persistance of posts & begin to create an API to interact with. We'll also need to build out a notifier of some sort...
+
+Thanks for reading!

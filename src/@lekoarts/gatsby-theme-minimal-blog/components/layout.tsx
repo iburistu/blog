@@ -1,8 +1,8 @@
-import React from "react"
-import { Global } from "@emotion/core"
-import { Main, Styled, Container, css } from "theme-ui"
-import "typeface-ibm-plex-sans"
-import SEO from "./seo"
+/** @jsx jsx */
+import * as React from "react"
+import { Global } from "@emotion/react"
+import { Box, Container, jsx } from "theme-ui"
+import Seo from "./seo"
 import Header from "./header"
 import Footer from "./footer"
 import CodeStyles from "../styles/code"
@@ -10,22 +10,29 @@ import SkipNavLink from "./skip-nav"
 
 type LayoutProps = { children: React.ReactNode; className?: string }
 
-const Layout = ({ children, className }: LayoutProps) => (
-  <Styled.root data-testid="theme-root">
+const Layout = ({ children, className = `` }: LayoutProps) => (
+  <React.Fragment>
     <Global
-      styles={css({
+      styles={(theme) => ({
         "*": {
           boxSizing: `inherit`,
         },
-        body: {
-          margin: 0,
-          padding: 0,
-          boxSizing: `border-box`,
-          textRendering: `optimizeLegibility`,
+        html: {
+          WebkitTextSizeAdjust: `100%`,
+        },
+        img: {
+          borderStyle: `none`,
+        },
+        pre: {
+          fontFamily: `monospace`,
+          fontSize: `1em`,
+        },
+        "[hidden]": {
+          display: `none`,
         },
         "::selection": {
-          backgroundColor: `primary`,
-          color: `white`,
+          backgroundColor: theme.colors.text,
+          color: theme.colors.background,
         },
         a: {
           transition: `all 0.3s ease-in-out`,
@@ -33,16 +40,16 @@ const Layout = ({ children, className }: LayoutProps) => (
         },
       })}
     />
-    <SEO />
+    <Seo />
     <SkipNavLink>Skip to content</SkipNavLink>
     <Container>
       <Header />
-      <Main id="skip-nav" css={css({ ...CodeStyles })} className={className}>
+      <Box id="skip-nav" sx={{ ...CodeStyles }} className={className}>
         {children}
-      </Main>
+      </Box>
       <Footer />
     </Container>
-  </Styled.root>
+  </React.Fragment>
 )
 
 export default Layout
