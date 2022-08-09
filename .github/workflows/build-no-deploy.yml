@@ -1,0 +1,19 @@
+name: Build CI
+
+on:
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+        - uses: actions/checkout@v2
+        - name: Use Node.js 16
+          uses: actions/setup-node@v2
+          with:
+              node-version: '16.x'
+        - run: npm i
+        - run: npm run build
+          env:
+            GA_TRACKING_ID: ${{ secrets.GA_TRACKING_ID }}
