@@ -32,6 +32,21 @@
     "styled-components": "^5.3.0"
   },
   "devDependencies": {
-    "cross-env": "^7.0.3"
+    "ansi-html": ">=0.0.8",
+    "ansi-regex": ">=4.1.1",
+    "browserslist": ">=4.16.5",
+    "cross-env": "^7.0.3",
+    "cross-fetch": ">=3.1.5",
+    "dicer": ">=0.3.1",
+    "file-type": ">=16.5.4",
+    "got": ">=11.8.5",
+    "immer": ">=9.0.6",
+    "node-fetch": ">=2.6.7",
+    "nth-check": ">=2.0.1",
+    "parse-path": ">=5.0.0",
+    "sharp": ">=0.30.5",
+    "shell-quote": ">=1.7.3",
+    "trim": ">=0.0.3",
+    "ws": ">=7.4.6"
   }
 }
